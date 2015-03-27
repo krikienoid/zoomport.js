@@ -1,0 +1,13 @@
+/**
+ * These styles are only used to style world.svg and are not used by ZoomPort.js
+ */
+
+path {
+	fill : #022735;
+}
+
+.selected-region {
+	fill : #5caeb9;
+	stroke : #ffffff;
+	stroke-width : 2;
+}

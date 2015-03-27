@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8" />
+
+		<title>ZoomPort.js - Zoomable Map Demo</title>
+
+		<meta name="description" content="ZoomPort.js - A JS API for creating viewports that can zoom in and enlarge their contents." />
+		<meta name="author" content="Ken Sugiura" />
+
+		<link type="text/css" rel="stylesheet" href="css/reset.css" />
+		<link type="text/css" rel="stylesheet" href="css/zoommap.css" />
+		<script type="text/javascript" src="js/legacyevents.js"></script>
+		<script type="text/javascript" src="js/zoomport.js"></script>
+	</head>
+
+	<body>
+
+		<header class="page-header info-box">
+			<h1>Zoomable Map Demo</h1>
+			<p>Selected Region :&nbsp;<span class="disp-out" id="disp-region-name">-click on a region!-</span></p>
+			<p>Zoom Scale :&nbsp;<span class="disp-out" id="disp-zoom-scale"></span></p>
+			<p>Zoom Slider :&nbsp;<input class="disp-in" type="range" value="0" id="input-range-zoom-scale" /></p>
+		</header>
+
+		<div class="page-body" id="zoom-map-outer">
+			<object id="zoom-map-object" type="image/svg+xml" data="img/world.svg">Your browser does not support SVG</object>
+		</div>
+
+		<a class="git-link info-box" href="https://github.com/krikienoid/zoomport.js">ZoomPort.js</a>
+
+		<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+
+	var zoomMap,
+		zoomMapObject,
+		zoomMapRegions,
+		selectedRegion,
+		dispRegionName,
+		dispZoomScale,
+		inputRangeZoomScale,
+		loadSVGTimeout;
+
+	// Init
+	zoomMapObject       = document.getElementById('zoom-map-object');
+	dispRegionName      = document.getElementById('disp-region-name');
+	dispZoomScale       = document.getElementById('disp-zoom-scale');
+	inputRangeZoomScale = document.getElementById('input-range-zoom-scale');
+	zoomMap             = ZoomPort(
+		document.getElementById('zoom-map-outer'),
+		zoomMapObject,
+		{
+			scale         : 1.5,
+			transitionsOn : true,
+			panningOn     : false
+		}
+	);
+	window.zoomMap = zoomMap;
+
+	loadSVGTimeout = window.setInterval(function () {
+
+		if (zoomMapObject.contentDocument) {
+
+			// SVG file Loaded.
+			console.log('Map loaded.');
+			window.clearInterval(loadSVGTimeout);
+
+			zoomMapRegions = zoomMapObject.contentDocument.firstElementChild;
+
+			// Events
+			zoomMapRegions.addEventListener('click', function (e) {
+				var selectedRegionName = '',
+					vBox;
+				if (selectedRegion) {
+					selectedRegion.classList.remove('selected-region');
+				}
+				selectedRegion = e.target;
+				if (
+					selectedRegion &&
+					selectedRegion.parentNode === zoomMapRegions
+				)
+				{
+					vBox = selectedRegion.getBBox();
+					e.preventDefault();
+					zoomMap.to({
+						x       : vBox.x,
+						y       : vBox.y,
+						width   : vBox.width,
+						height  : vBox.height,
+						padding : 20
+					});
+					selectedRegionName = e.target.id;
+					selectedRegionName = selectedRegionName.replace(
+						/\w\S*/g,
+						function (s) {
+							return s.charAt(0).toUpperCase() + s.substr(1).toLowerCase();
+						}
+					);
+					selectedRegion.classList.add('selected-region');
+				}
+				dispRegionName.innerHTML  = selectedRegionName;
+				dispZoomScale.innerHTML   = zoomMap.scale().toFixed(2);
+				inputRangeZoomScale.value = (zoomMap.scale() - 1) * 100 / 19;
+			});
+			zoomMapRegions.addEventListener('keyup', function (e) {
+				if (zoomMap.scale() !== 1 && e.keyCode === 27) {
+					zoomMap.out();
+					dispZoomScale.innerHTML   = zoomMap.scale().toFixed(2);
+					inputRangeZoomScale.value = (zoomMap.scale() - 1) * 100 / 19;
+				}
+			});
+
+		}
+
+	}, 100);
+
+	inputRangeZoomScale.addEventListener('change', function (e) {
+		zoomMap.to({scale : 1 + (e.target.value) * 19 / 100});
+		dispZoomScale.innerHTML = zoomMap.scale().toFixed(2);
+	});
+
+});
+
+		</script>
+
+	</body>
+
+</html>
