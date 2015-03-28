@@ -1,6 +1,6 @@
 /*!
  * ZoomPort.js
- * 0.21.11
+ * 0.21.12
  * Ken Sugiura (2015)
  * https://github.com/krikienoid/zoomport.js
  *
@@ -197,26 +197,9 @@
 		 * @returns {boolean} transitionsOn
 		 */
 		this.transitionsOn = function (val) {
-			var innerFrameStyle = innerFrame.style,
-				transitionVal   = TRANSITION_DURATION + 'ms ' + TRANSITION_FUNCTION;
 			if (val !== undefined) {
 				if (supportsTransforms) {
 					isTransitionsOn = !!val;
-					if (isTransitionsOn) {
-						// The easing that will be applied when we zoom in/out
-						innerFrameStyle.transition       = 'transform '         + transitionVal;
-						innerFrameStyle.OTransition      = '-o-transform '      + transitionVal;
-						innerFrameStyle.msTransition     = '-ms-transform '     + transitionVal;
-						innerFrameStyle.MozTransition    = '-moz-transform '    + transitionVal;
-						innerFrameStyle.WebkitTransition = '-webkit-transform ' + transitionVal;
-					}
-					else {
-						innerFrameStyle.transition       = '';
-						innerFrameStyle.OTransition      = '';
-						innerFrameStyle.msTransition     = '';
-						innerFrameStyle.MozTransition    = '';
-						innerFrameStyle.WebkitTransition = '';
-					}
 				}
 				else {
 					window.console.log(
@@ -263,18 +246,18 @@
 		};
 
 		/**
-		 * Get zoomable content HTML element.
+		 * Zoomable content HTML element.
 		 *
-		 * @returns {Element} innerFrame
+		 * @member {Element} innerFrame
 		 */
-		this.innerFrame = function () {return innerFrame;};
+		this.innerFrame = innerFrame;
 
 		/**
-		 * Get container HTML element.
+		 * Container HTML element.
 		 *
-		 * @returns {Element} outerFrame
+		 * @member {Element} outerFrame
 		 */
-		this.outerFrame = function () {return outerFrame;};
+		this.outerFrame = outerFrame;
 
 		//
 		// Public Methods
@@ -397,8 +380,8 @@
 	function getZoomProp (zoomPort, options) {
 
 		var level       = zoomPort.scale(),
-			innerFrame  = zoomPort.innerFrame(),
-			outerFrame  = zoomPort.outerFrame(),
+			innerFrame  = zoomPort.innerFrame,
+			outerFrame  = zoomPort.outerFrame,
 			outerSize   = getSize(outerFrame),
 			scrollPos   = getScrollPos(outerFrame),
 			innerSize   = getSize(innerFrame),
@@ -556,9 +539,9 @@
 	function magnify (zoomPort, scale, viewBox) {
 
 		var level           = zoomPort.scale(),
-			innerFrame      = zoomPort.innerFrame(),
+			innerFrame      = zoomPort.innerFrame,
 			innerFrameStyle = innerFrame.style,
-			outerFrame      = zoomPort.outerFrame(),
+			outerFrame      = zoomPort.outerFrame,
 			outerSize       = getSize(outerFrame),
 			scrollPos       = getScrollPos(outerFrame),
 			frameCenterX    = outerSize.width  / 2,
@@ -591,7 +574,6 @@
 					((newCenterX - frameCenterX) * (1 - 1 / level)) + 'px, ' +
 					((newCenterY - frameCenterY) * (1 - 1 / level)) + 'px)';
 
-				zoomPort.transitionsOn(false);
 				setTransformOrigin(innerFrame, origin);
 				setTransform(innerFrame, oldTransform + resetTranslate);
 
@@ -607,7 +589,7 @@
 
 					//setScrollingEnabled(outerFrame, false);
 
-					zoomPort.transitionsOn(true);
+					setTransformTransition(innerFrame, TRANSITION_DURATION, TRANSITION_FUNCTION);
 					setTransform(innerFrame, transform);
 
 					window.setTimeout(function () {
@@ -618,14 +600,12 @@
 								(frameCenterX * (1 - 1 / scale)) + 'px, ' +
 								(frameCenterY * (1 - 1 / scale)) + 'px)';
 
-						zoomPort.transitionsOn(false);
+						setTransformTransition(innerFrame, 0);
 						setTransformOrigin(innerFrame, origin);
 						setTransform(innerFrame, transform);
 
 						setScrollingEnabled(outerFrame, true);
 						setScrollPos(outerFrame, offsetX, offsetY);
-
-						zoomPort.transitionsOn(true);
 
 					}, TRANSITION_DURATION);
 
@@ -667,7 +647,7 @@
 	function pan () {
 
 		var level        = this.scale(),
-			outerFrame   = this.outerFrame(),
+			outerFrame   = this.outerFrame,
 			outerSize    = getSize(outerFrame),
 			outerOffset  = (outerFrame === docElem) ?
 				{left : 0, top : 0} : outerFrame.getBoundingClientRect(),
@@ -876,6 +856,34 @@
 		elemStyle.msTransformOrigin     = val;
 		elemStyle.MozTransformOrigin    = val;
 		elemStyle.WebkitTransformOrigin = val;
+	}
+
+	/**
+	 * Set CSS transition property for element transforms.
+	 * The easing that will be applied when we zoom in/out.
+	 *
+	 * @private
+	 * @param {Element} elem
+	 * @param {number}  transitionDuration
+	 * @param {string}  transitionFunction
+	 */
+	function setTransformTransition (elem, transitionDuration, transitionFunction) {
+		var elemStyle     = elem.style,
+			transitionVal = (transitionDuration || 0) + 'ms ' + (transitionFunction || '');
+		if (transitionDuration) {
+			elemStyle.transition       = 'transform '         + transitionVal;
+			elemStyle.OTransition      = '-o-transform '      + transitionVal;
+			elemStyle.msTransition     = '-ms-transform '     + transitionVal;
+			elemStyle.MozTransition    = '-moz-transform '    + transitionVal;
+			elemStyle.WebkitTransition = '-webkit-transform ' + transitionVal;
+		}
+		else {
+			elemStyle.transition       = '';
+			elemStyle.OTransition      = '';
+			elemStyle.msTransition     = '';
+			elemStyle.MozTransition    = '';
+			elemStyle.WebkitTransition = '';
+		}
 	}
 
 	//

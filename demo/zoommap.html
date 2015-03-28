@@ -61,13 +61,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
 	loadSVGTimeout = window.setInterval(function () {
 
-		if (zoomMapObject.contentDocument) {
+		if (
+			zoomMapObject.contentDocument &&
+			zoomMapObject.contentDocument.querySelector('svg')
+		)
+		{
 
 			// SVG file Loaded.
 			console.log('Map loaded.');
 			window.clearInterval(loadSVGTimeout);
 
-			zoomMapRegions = zoomMapObject.contentDocument.firstElementChild;
+			zoomMapRegions = zoomMapObject.contentDocument.querySelector('svg');
 
 			// Events
 			zoomMapRegions.addEventListener('click', function (e) {
