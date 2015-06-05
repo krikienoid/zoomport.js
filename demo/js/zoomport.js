@@ -1,6 +1,6 @@
 /*!
  * ZoomPort.js
- * 0.21.12
+ * 0.21.14
  * Ken Sugiura (2015)
  * https://github.com/krikienoid/zoomport.js
  *
@@ -40,26 +40,6 @@
 	// The current mouse position, used for panning
 	var mouseX = 0,
 		mouseY = 0;
-
-	//
-	// Init
-	//
-
-	// Wait until DOM is loaded before initializing
-	document.addEventListener('DOMContentLoaded', function () {
-
-		// Document aliases
-		docBody = document.body;
-		docElem = document.documentElement;
-
-		// Check for transform support so that we can fallback otherwise
-		supportsTransforms = 'WebkitTransform' in docBody.style ||
-			'MozTransform'    in docBody.style ||
-			'msTransform'     in docBody.style ||
-			'OTransform'      in docBody.style ||
-			'transform'       in docBody.style;
-
-	});
 
 	//
 	// Constructors
@@ -282,7 +262,7 @@
 
 			var zoomProp;
 
-			if (options instanceof window.Object) {
+			if (options) {
 
 				// Settings
 				this.transitionsOn(options.transitionsOn);
@@ -308,7 +288,7 @@
 
 					// Set callback function
 					window.clearTimeout(callbackTimeout);
-					if (options && options.callback instanceof window.Function) {
+					if (typeof options.callback === 'function') {
 						callbackTimeout = window.setTimeout(
 							options.callback,
 							TOTAL_WAIT_TIME
@@ -398,7 +378,7 @@
 		// Calculate scale and viewBox based on options
 		if (
 			(
-				options.element instanceof window.Element || options.padding ||
+				isElem(options.element) || options.padding ||
 				options.scale || options.x || options.y || options.width || options.height
 			) !== undefined
 		)
@@ -406,7 +386,7 @@
 
 			// Calculate scale and viewBox
 			if (
-				options.element instanceof window.Element &&
+				isElem(options.element) &&
 				options.element !== innerFrame &&
 				options.element !== outerFrame
 			)
@@ -433,7 +413,7 @@
 			else {
 
 				// Get scale value from options
-				if (options.element instanceof window.Element) {
+				if (isElem(options.element)) {
 					scale = 1;
 				}
 				else if (!window.isNaN(options.scale)) {
@@ -466,7 +446,7 @@
 			}
 
 			// Apply padding to viewBox
-			if (options && !window.isNaN(options.padding)) {
+			if (!window.isNaN(options.padding)) {
 				padding = options.padding;
 			}
 			viewBox.x      -= padding;
@@ -718,6 +698,22 @@
 	//
 
 	/**
+	 * Checks if object is an HTML element.
+	 *
+	 * @param obj
+	 * @returns {boolean} isElement
+	 */
+	function isElem (obj) {
+		return !!(
+			obj &&
+			(typeof obj === 'object' || typeof obj === 'function') &&
+			obj.tagName &&
+			obj.nodeType &&
+			(obj.nodeType === 1)
+		);
+	}
+
+	/**
 	 * Get position of element relative to outerFrame.
 	 *
 	 * @private
@@ -726,16 +722,12 @@
 	 * @returns {Object} pos
 	 */
 	function getRelativePos (outerFrame, elem) {
-		var x = 0,
-			y = 0;
-		if (elem instanceof window.Element) {
-			x = elem.offsetLeft;
+		var x = elem.offsetLeft,
 			y = elem.offsetTop;
-			while (elem.offsetParent && elem !== docBody && elem !== outerFrame) {
-				elem = elem.offsetParent;
-				x += elem.offsetLeft;
-				y += elem.offsetTop;
-			}
+		while (elem.offsetParent && elem !== docBody && elem !== outerFrame) {
+			elem = elem.offsetParent;
+			x += elem.offsetLeft;
+			y += elem.offsetTop;
 		}
 		return {x : x, y : y};
 	}
@@ -764,7 +756,7 @@
 					docBody.clientHeight
 			};
 		}
-		else if (frame instanceof window.Element) {
+		else {
 			return frame.getBoundingClientRect();
 		}
 	}
@@ -789,7 +781,7 @@
  					docBody.scrollTop
 			};
 		}
-		else if (frame instanceof window.Element) {
+		else {
 			return {
 				x : frame.scrollLeft,
 				y : frame.scrollTop
@@ -809,7 +801,7 @@
 		if (frame === docElem || frame === docBody) {
 			window.scroll(x, y);
 		}
-		else if (frame instanceof window.Element) {
+		else {
 			frame.scrollLeft = x;
 			frame.scrollTop  = y;
 		}
@@ -913,12 +905,7 @@
 	window.ZoomPort = function (outerFrame, innerFrame, options) {
 
 		// Options defined instead of innerFrame as second parameter
-		if (
-			innerFrame instanceof window.Object &&
-			!(innerFrame instanceof window.Element) &&
-			options === undefined
-		)
-		{
+		if (options === undefined && innerFrame && !isElem(innerFrame)) {
 			options = innerFrame;
 		}
 
@@ -928,19 +915,14 @@
 			outerFrame = docElem;
 			innerFrame = docBody;
 		}
-		else if (
-			outerFrame instanceof window.Element &&
-			!(innerFrame instanceof window.Element)
-		)
-		{
+		else if (isElem(outerFrame) && !isElem(innerFrame)) {
 			// Default innerFrame
 			innerFrame = outerFrame.firstElementChild;
 		}
 
 		// Create ZoomPort
 		if (
-			outerFrame instanceof window.Element &&
-			innerFrame instanceof window.Element &&
+			isElem(outerFrame) && isElem(innerFrame) &&
 			innerFrame.parentNode === outerFrame
 		)
 		{
@@ -949,6 +931,26 @@
 		else {
 			window.console.log('Error: ZoomPort: Invalid parameters.');
 		}
+
+	};
+
+	/**
+	 * Wait until DOM is loaded before initializing.
+	 */
+	window.ZoomPort.init = function () {
+
+		// Document aliases
+		docBody = document.body;
+		docElem = document.documentElement;
+
+		// Check for transform support so that we can fallback otherwise
+		supportsTransforms = 'WebkitTransform' in docBody.style ||
+			'MozTransform'    in docBody.style ||
+			'msTransform'     in docBody.style ||
+			'OTransform'      in docBody.style ||
+			'transform'       in docBody.style;
+
+		window.ZoomPort.init = null;
 
 	};
 
