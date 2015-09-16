@@ -6,7 +6,7 @@ A JS API for creating viewports that can zoom in and enlarge their contents.
 
 Based on [zoom.js](http://lab.hakim.se/zoom-js) by Hakim El Hattab.
 
-[View Demo Page](http://krikienoid.github.io/zoomport/zoommap.html).
+[View Demo Page](http://krikienoid.github.io/zoomport.js/demo/zoommap.html).
 
 
 
