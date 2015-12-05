@@ -3,11 +3,11 @@
  */
 
 path {
-	fill : #022735;
+    fill : #022735;
 }
 
 .selected-region {
-	fill : #5caeb9;
-	stroke : #ffffff;
-	stroke-width : 2;
+    fill : #5caeb9;
+    stroke : #ffffff;
+    stroke-width : 2;
 }

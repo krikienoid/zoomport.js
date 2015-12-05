@@ -77,7 +77,7 @@ Zoom in on an HTML Element:
     zoomPort.to({
         element       : document.getElementsByTagName('p')[0],
         padding       : 15,
-		transitionsOn : false
+        transitionsOn : false
     });
 ```
 
